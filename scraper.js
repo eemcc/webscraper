@@ -29,87 +29,151 @@ const fs = require('fs');
             if ( buttonName == "Documentation" || buttonName == "Blog" || buttonName == "Forums" || buttonName == "Create an Account"){
             }else if( i == 0 ){
                 const links = await page.evaluate(()=>{
-                    const lists = [];
+                    const lists = {};
 
-                    const headSource = Array.from(document.querySelectorAll('head'));
-                    headSource.forEach(function(node){
-                        const data = {
-                            'url': node.querySelector('meta[property="og:url"]').getAttribute('content'),
-                            'featureImage': node.querySelector('meta[property="og:image"]').getAttribute('content'),
-                            'meta': node.querySelector('meta[property="og:description"]').getAttribute('content')
-                        };
-                        console.log(data);
-                        lists.push(data);
-                    }); 
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
 
                     const getNodesInnerText = (nodes)  => {
                         return Array.from(nodes).map(node => node.innerText);
                     }
                     
-                    const node = Array.from(document.querySelectorAll('main'));
-                    node.forEach(function(node){
-                        const data = {
-                            'title': node.querySelector('h1').innerText,
-                            'headers': getNodesInnerText(document.querySelectorAll('h2')),
-                            'subHeaders': getNodesInnerText(document.querySelectorAll('h3')),
-                            'smallerHeaders': getNodesInnerText(document.querySelectorAll('h4')),
-                            'bodyText': getNodesInnerText(document.querySelectorAll('p')),
-                        };             
-                        lists.push(data);
-                    });
-                    headSource.push(...node);
+                    lists.title = document.querySelector('h1').innerText;
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
                     return lists;
                 });
 
+                var entry = [];
+                entry.push(links);
                 console.log(links);
 
                 try {
                     await index.clearObjects()
-                    await index.saveObjects(links, {
+                    await index.saveObjects(entry, {
                         autoGenerateObjectIDIfNotExist: true,
                     })
-                    } catch (error) {
+                } catch (error) {
                     console.log(error)
-                    }
-            }else{
+                }
+            }else if( buttonName == "Case Studies" ){
                 button.click();
                 await page.waitForNavigation();
                 let links = await page.evaluate(()=>{
-                    const lists = [];
+                    const lists = {};
 
-                    const headSource = Array.from(document.querySelectorAll('head'));
-                    headSource.forEach(function(node){
-                        const data = {
-                            'url': node.querySelector('meta[property="og:url"]').getAttribute('content'),
-                            'featureImage': node.querySelector('meta[property="og:image"]').getAttribute('content'),
-                            'meta': node.querySelector('meta[property="og:description"]').getAttribute('content')
-                        };
-                        lists.push(data);
-                    }); 
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
 
                     const getNodesInnerText = (nodes)  => {
                         return Array.from(nodes).map(node => node.innerText);
                     }
                     
-                    const node = Array.from(document.querySelectorAll('main'));
-                    node.forEach(function(node){
-                        const data = {
-                            'title': node.querySelector('h1').innerText,
-                            'headers': getNodesInnerText(document.querySelectorAll('h2')),
-                            'subHeaders': getNodesInnerText(document.querySelectorAll('h3')),
-                            'smallerHeaders': getNodesInnerText(document.querySelectorAll('h4')),
-                            'bodyText': getNodesInnerText(document.querySelectorAll('p')),
-                        };             
-                        lists.push(data);
-                    });
-                    headSource.push(...node);
+                    lists.title = document.querySelector('h1').innerText;
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
                     return lists;
                 });
 
+                var entry = [];
+                entry.push(links);
                 console.log(links);
 
                 try {
-                    await index.saveObjects(links, {
+                    await index.saveObjects(entry, {
+                        autoGenerateObjectIDIfNotExist: true,
+                    })
+                } catch (error) {
+                    console.log(error)
+                }          
+            
+                const internalItems = await page.$$('.block-container');
+
+                for (let s = 0; s < internalItems.length; s++) {
+                    const internalItems = await page.$$('.block-container');
+
+                    const block = internalItems[s];
+                    const subButton = await block.$('a[href*="client-case-studies"]');
+                    if (subButton){
+                        subButton.click();
+                        await page.waitForNavigation();
+                        let links = await page.evaluate(()=>{
+                            const lists = {};
+
+                            const headSource = document.querySelector('head');
+                            lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                            lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                            lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+
+                            const getNodesInnerText = (nodes)  => {
+                                return Array.from(nodes).map(node => node.innerText);
+                            }
+                            
+                            lists.title = document.querySelector('h1').innerText;
+                            lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
+                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
+                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
+                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
+                            return lists;
+                        });
+
+                        var entry = [];
+                        entry.push(links);
+                        console.log(links);
+
+                        try {
+                            await index.saveObjects(entry, {
+                                autoGenerateObjectIDIfNotExist: true,
+                            })
+                        } catch (error) {
+                            console.log(error)
+                        }   
+                    }else{}
+
+                    await page.goBack()
+                }
+            } 
+            else{
+                button.click();
+                await page.waitForNavigation();
+                let links = await page.evaluate(()=>{
+                    const lists = {};
+
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+
+                    const getNodesInnerText = (nodes)  => {
+                        return Array.from(nodes).map(node => node.innerText);
+                    }
+                    
+                    lists.title = document.querySelector('h1').innerText;
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
+                    return lists;
+                });
+
+                var entry = [];
+                entry.push(links);
+                console.log(links);
+
+                 try {
+                    await index.saveObjects(entry, {
                         autoGenerateObjectIDIfNotExist: true,
                     })
                 } catch (error) {
