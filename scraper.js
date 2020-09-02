@@ -4,7 +4,11 @@ var algoliasearch = require('algoliasearch');
 const client = algoliasearch(config.ALGOLIA.APP_ID, config.ALGOLIA.API_KEY);
 const index = client.initIndex('dev_MarketingSite');
 const puppeteer = require ('puppeteer');
-const fs = require('fs');
+
+index.setSettings({
+    searchableAttributes: ['title', 'headers', 'subheaders', 'smallerHeaders', 'bodyText'],
+    customRanking: ['asc(title, headers, subheaders, smallerHeaders, bodyText)'],
+  });
 
 (async () => {
     try{
@@ -37,14 +41,15 @@ const fs = require('fs');
                     lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
 
                     const getNodesInnerText = (nodes)  => {
-                        return Array.from(nodes).map(node => node.innerText);
+                        return Array.from(nodes).map(node => node.innerText
+                        );
                     }
-                    
+
                     lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
 
                     return lists;
                 });
@@ -61,7 +66,7 @@ const fs = require('fs');
                 } catch (error) {
                     console.log(error)
                 }
-            }else if( buttonName == "Case Studies" ){
+            }/* else if( buttonName == "Events" ){
                 button.click();
                 await page.waitForNavigation();
                 let links = await page.evaluate(()=>{
@@ -81,6 +86,89 @@ const fs = require('fs');
                     lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
                     lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
                     lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
+                    return lists;
+                });
+
+                var entry = [];
+                entry.push(links);
+                console.log(links);
+
+                try {
+                    await index.saveObjects(entry, {
+                        autoGenerateObjectIDIfNotExist: true,
+                    })
+                } catch (error) {
+                    console.log(error)
+                }          
+            
+                const internalItems = await page.$$('.title');
+
+                for (let s = 0; s < internalItems.length; s++) {
+                    const internalItems = await page.$$('.title');
+
+                    const block = internalItems[s];
+                    await block.$('a')
+                    if ('a[href*="iot-world"]'){
+                        const subButton = await block.$('a[href*="iot-world"]');
+                        subButton.click();
+                        await page.waitForNavigation();
+                        let links = await page.evaluate(()=>{
+                            const lists = {};
+
+                            const headSource = document.querySelector('head');
+                            lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                            lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                            lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+
+                            const getNodesInnerText = (nodes)  => {
+                                return Array.from(nodes).map(node => node.innerText);
+                            }
+                            
+                            lists.title = document.querySelector('h1').innerText;
+                            lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
+                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
+                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
+                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+
+                            return lists;
+                        });
+
+                        var entry = [];
+                        entry.push(links);
+                        console.log(links);
+
+                        try {
+                            await index.saveObjects(entry, {
+                                autoGenerateObjectIDIfNotExist: true,
+                            })
+                        } catch (error) {
+                            console.log(error)
+                        }   
+                    }else{}
+
+                    await page.goBack()
+                }
+            } */else if( buttonName == "Case Studies" ){
+                button.click();
+                await page.waitForNavigation();
+                let links = await page.evaluate(()=>{
+                    const lists = {};
+
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
+                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+
+                    const getNodesInnerText = (nodes)  => {
+                        return Array.from(nodes).map(node => node.innerText);
+                    }
+                    
+                    lists.title = document.querySelector('h1').innerText;
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
 
                     return lists;
                 });
@@ -120,10 +208,10 @@ const fs = require('fs');
                             }
                             
                             lists.title = document.querySelector('h1').innerText;
-                            lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
-                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
-                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
-                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+                            lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
+                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
+                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
 
                             return lists;
                         });
@@ -143,8 +231,7 @@ const fs = require('fs');
 
                     await page.goBack()
                 }
-            } 
-            else{
+            } else{
                 button.click();
                 await page.waitForNavigation();
                 let links = await page.evaluate(()=>{
@@ -160,10 +247,10 @@ const fs = require('fs');
                     }
                     
                     lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
+                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
+                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
+                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
 
                     return lists;
                 });
