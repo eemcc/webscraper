@@ -273,4 +273,3 @@ index.setSettings({
         console.log('our error', e);
     }
   }) ();
-
