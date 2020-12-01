@@ -6,8 +6,8 @@ const index = client.initIndex('dev_MarketingSite');
 const puppeteer = require ('puppeteer');
 
 index.setSettings({
-    searchableAttributes: ['title', 'headers', 'subheaders', 'smallerHeaders', 'bodyText'],
-    customRanking: ['asc(title, headers, subheaders, smallerHeaders, bodyText)'],
+    searchableAttributes: ['header', 'subheader', 'body'],
+    customRanking: ['asc(header, subheader, body)'],
   });
 
 (async () => {
@@ -37,19 +37,51 @@ index.setSettings({
 
                     const headSource = document.querySelector('head');
                     lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+                    lists.objectID = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+
+                    const getNodesInnerText = (nodes)  => {
+                        return Array.from(nodes).map(node => node.innerText
+                        );
+                    }
+                    
+                    lists.header = document.querySelector('h1').innerText.toLowerCase();
+                    lists.subHeader = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.body = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    lists.type = "Page"
+
+                    return lists;
+                });
+
+                var entry = [];
+                entry.push(links);
+                console.log(links);
+
+                try {
+                    await index.partialUpdateObject(links, {
+                        createIfNotExists: true,
+                    })
+                } catch (error) {
+                    console.log(error)
+                }
+            } else if( buttonName == "Case Studies" ){
+                button.click();
+                await page.waitForNavigation();
+                let links = await page.evaluate(()=>{
+                    const lists = {};
+
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.objectID = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
 
                     const getNodesInnerText = (nodes)  => {
                         return Array.from(nodes).map(node => node.innerText
                         );
                     }
 
-                    lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    lists.header = document.querySelector('h1').innerText.toLowerCase();
+                    lists.subHeader = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.body = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    lists.type = "Page"
 
                     return lists;
                 });
@@ -59,127 +91,8 @@ index.setSettings({
                 console.log(links);
 
                 try {
-                    await index.clearObjects()
-                    await index.saveObjects(entry, {
-                        autoGenerateObjectIDIfNotExist: true,
-                    })
-                } catch (error) {
-                    console.log(error)
-                }
-            }/* else if( buttonName == "Events" ){
-                button.click();
-                await page.waitForNavigation();
-                let links = await page.evaluate(()=>{
-                    const lists = {};
-
-                    const headSource = document.querySelector('head');
-                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
-
-                    const getNodesInnerText = (nodes)  => {
-                        return Array.from(nodes).map(node => node.innerText);
-                    }
-                    
-                    lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
-
-                    return lists;
-                });
-
-                var entry = [];
-                entry.push(links);
-                console.log(links);
-
-                try {
-                    await index.saveObjects(entry, {
-                        autoGenerateObjectIDIfNotExist: true,
-                    })
-                } catch (error) {
-                    console.log(error)
-                }          
-            
-                const internalItems = await page.$$('.title');
-
-                for (let s = 0; s < internalItems.length; s++) {
-                    const internalItems = await page.$$('.title');
-
-                    const block = internalItems[s];
-                    await block.$('a')
-                    if ('a[href*="iot-world"]'){
-                        const subButton = await block.$('a[href*="iot-world"]');
-                        subButton.click();
-                        await page.waitForNavigation();
-                        let links = await page.evaluate(()=>{
-                            const lists = {};
-
-                            const headSource = document.querySelector('head');
-                            lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                            lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                            lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
-
-                            const getNodesInnerText = (nodes)  => {
-                                return Array.from(nodes).map(node => node.innerText);
-                            }
-                            
-                            lists.title = document.querySelector('h1').innerText;
-                            lists.headers = getNodesInnerText(document.querySelectorAll('h2'));
-                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3'));
-                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4'));
-                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p'));
-
-                            return lists;
-                        });
-
-                        var entry = [];
-                        entry.push(links);
-                        console.log(links);
-
-                        try {
-                            await index.saveObjects(entry, {
-                                autoGenerateObjectIDIfNotExist: true,
-                            })
-                        } catch (error) {
-                            console.log(error)
-                        }   
-                    }else{}
-
-                    await page.goBack()
-                }
-            } */else if( buttonName == "Case Studies" ){
-                button.click();
-                await page.waitForNavigation();
-                let links = await page.evaluate(()=>{
-                    const lists = {};
-
-                    const headSource = document.querySelector('head');
-                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
-
-                    const getNodesInnerText = (nodes)  => {
-                        return Array.from(nodes).map(node => node.innerText);
-                    }
-                    
-                    lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
-
-                    return lists;
-                });
-
-                var entry = [];
-                entry.push(links);
-                console.log(links);
-
-                try {
-                    await index.saveObjects(entry, {
-                        autoGenerateObjectIDIfNotExist: true,
+                    await index.partialUpdateObject(links, {
+                        createIfNotExists: true,
                     })
                 } catch (error) {
                     console.log(error)
@@ -198,31 +111,30 @@ index.setSettings({
                         let links = await page.evaluate(()=>{
                             const lists = {};
 
-                            const headSource = document.querySelector('head');
-                            lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                            lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                            lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+                    const headSource = document.querySelector('head');
+                    lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
+                    lists.objectID = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
 
-                            const getNodesInnerText = (nodes)  => {
-                                return Array.from(nodes).map(node => node.innerText);
-                            }
-                            
-                            lists.title = document.querySelector('h1').innerText;
-                            lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
-                            lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
-                            lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
-                            lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    const getNodesInnerText = (nodes)  => {
+                        return Array.from(nodes).map(node => node.innerText
+                        );
+                    }
 
-                            return lists;
-                        });
+                    lists.header = document.querySelector('h1').innerText.toLowerCase();
+                    lists.subHeader = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.body = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    lists.type = "Page"
+
+                    return lists;
+                });
 
                         var entry = [];
                         entry.push(links);
                         console.log(links);
 
                         try {
-                            await index.saveObjects(entry, {
-                                autoGenerateObjectIDIfNotExist: true,
+                            await index.partialUpdateObject(links, {
+                                createIfNotExists: true,
                             })
                         } catch (error) {
                             console.log(error)
@@ -239,18 +151,17 @@ index.setSettings({
 
                     const headSource = document.querySelector('head');
                     lists.url = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
-                    lists.featureImage = headSource.querySelector('meta[property="og:image"]').getAttribute('content');
-                    lists.meta = headSource.querySelector('meta[property="og:description"]').getAttribute('content');
+                    lists.objectID = headSource.querySelector('meta[property="og:url"]').getAttribute('content');
 
                     const getNodesInnerText = (nodes)  => {
-                        return Array.from(nodes).map(node => node.innerText);
+                        return Array.from(nodes).map(node => node.innerText
+                        );
                     }
-                    
-                    lists.title = document.querySelector('h1').innerText;
-                    lists.headers = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
-                    lists.subHeaders = getNodesInnerText(document.querySelectorAll('h3')).join(" ");
-                    lists.smallerHeaders = getNodesInnerText(document.querySelectorAll('h4')).join(" ");
-                    lists.bodyText = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+
+                    lists.header = document.querySelector('h1').innerText.toLowerCase();
+                    lists.subHeader = getNodesInnerText(document.querySelectorAll('h2')).join(" ");
+                    lists.body = getNodesInnerText(document.querySelectorAll('p')).join(" ");
+                    lists.type = "Page"
 
                     return lists;
                 });
@@ -259,9 +170,9 @@ index.setSettings({
                 entry.push(links);
                 console.log(links);
 
-                 try {
-                    await index.saveObjects(entry, {
-                        autoGenerateObjectIDIfNotExist: true,
+                try {
+                    await index.partialUpdateObject(links, {
+                        createIfNotExists: true,
                     })
                 } catch (error) {
                     console.log(error)
@@ -273,3 +184,4 @@ index.setSettings({
         console.log('our error', e);
     }
   }) ();
+
